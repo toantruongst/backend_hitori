@@ -13,8 +13,7 @@ class HirotySAT():
         self.method = method
         self.number_of_variables = 0
         self.number_of_clauses = 0
-        self.max_var_in_borad = 0
-        self.white = 0
+        self.number_of_var_ce = 0
         self.satisfiable = False
 
     def get_color_cc(self, output):
@@ -22,8 +21,7 @@ class HirotySAT():
         for k in output:
             positive = int(k) > 0
             k = abs(int(k))
-            # print("K: " +str(k) +" \n")
-            # print("Position: " + str((k-1) // self.columns)+ " and "+ str((k-1) % self.columns)+ "\n")
+
             if (k > (self.size*self.size)): 
                 return result
             if positive:
@@ -34,7 +32,7 @@ class HirotySAT():
         return result
     
 
-    def get_color_ce(self, arr, max_var_in_borad, white):
+    def get_color_ce(self, arr, max_var_in_borad, index):
         result = np.full((self.size, self.size), True, dtype=bool)
         leng = len(arr)
         for d in range(leng):
@@ -43,7 +41,7 @@ class HirotySAT():
                 break
             for i in range(self.size):
                 for j in range(self.size):
-                    if white[i][j] == -k:
+                    if index[i][j] == -k:
                         result[i][j] = False
                         break
         return result
@@ -58,12 +56,13 @@ class HirotySAT():
 
         elif self.method == 'CE' or self.method == "ConnectivityEncoding":
             alg = connectivity_encoding.ConnectivityEncoding(self.size, self.value, self.solver)
-            alg.encode_vars()
-            alg.cnf_rule_01()
-            alg.cnf_rule_02()
-            alg.cnf_rule_03()
-            self.max_var_in_borad = alg.number_of_vars
-            self.white = alg.white
+            alg.setVarDefault()
+            alg.cnfRule1()
+            alg.cnfRule2()
+            alg.setVar()
+            alg.cnfRule3()
+            self.max_var_in_borad = alg.numberVars
+            self.index = alg.index
 
         self.number_of_variables = alg.get_number_of_variables()
         self.number_of_clauses = self.solver.get_number_of_clauses()
@@ -95,7 +94,7 @@ class HirotySAT():
             if len(lines) > 1:
                 self.satisfiable = True
                 output = lines[1].split(" ")[:-1]
-                self.result = self.get_color_ce(output, self.max_var_in_borad, self.white)
+                self.result = self.get_color_ce(output, self.max_var_in_borad, self.index)
             else:
                 self.satisfiable = False
 
